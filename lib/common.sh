@@ -19,6 +19,7 @@ BIN_DIR="$DEST_HOME/.local/bin"
 
 BINDINGS="$HYPR_DIR/bindings.conf"
 HYPRIDLE="$HYPR_DIR/hypridle.conf"
+AUTOSTART="$HYPR_DIR/autostart.conf"
 
 # ── Pretty logging ───────────────────────────────────────────────────────
 _c_blue=$'\e[34m'; _c_green=$'\e[32m'; _c_yellow=$'\e[33m'; _c_red=$'\e[31m'; _c_dim=$'\e[2m'; _c_off=$'\e[0m'
@@ -104,4 +105,110 @@ append_block() {
   else
     { printf '\n'; block_begin "$name"; printf '%s\n' "$content"; block_end "$name"; } >>"$file"
   fi
+}
+
+# ── Quickshell component helpers (visualizer / launcher / power / overview) ──
+# Each component is a self-contained `qs -c NAME` config that reads the active
+# theme's colors.toml and adapts. They share theme-fx/ (shaders used by each
+# component's ThemeChrome.qml). Install = copy dir + shared fx, wire a keybind
+# and an autostart line, and launch it live; uninstall reverses all of that.
+QS_FX_DONE=0
+
+# rm_path PATH — remove a file/dir/symlink if present (dry-run aware).
+rm_path() { [[ -e $1 || -L $1 ]] && run rm -rf "$1" || true; }
+
+# is_live_env — true only for a real (non-dry-run) install into the actual $HOME.
+is_live_env() { [[ $DRY_RUN == 0 && $DEST_HOME == "$HOME" ]]; }
+
+# install_theme_fx — copy the shared shader/effects dir (once per run).
+install_theme_fx() {
+  [[ $QS_FX_DONE == 1 ]] && return 0
+  install_dir "$REPO_ROOT/extras/quickshell/theme-fx" "$QS_DIR/theme-fx"
+  QS_FX_DONE=1
+}
+
+# qs_kill NAME — stop a running `qs -c NAME` daemon. Matches /proc cmdline (NUL-
+# separated → tr to spaces) rather than `pkill -f`, which would also match this
+# script. No-op unless we're on the live host.
+qs_kill() {
+  is_live_env || return 0
+  local pid
+  for pid in $(pgrep -x qs 2>/dev/null || true); do
+    if tr '\0' ' ' </proc/"$pid"/cmdline 2>/dev/null | grep -q -- " -c $1 "; then
+      kill "$pid" 2>/dev/null || true
+    fi
+  done
+}
+
+# qs_launch NAME — (re)start a quickshell config detached on the live host.
+qs_launch() {
+  is_live_env || return 0
+  command -v qs >/dev/null || return 0
+  qs_kill "$1"
+  setsid qs -n -d -c "$1" >/dev/null 2>&1 < /dev/null & disown 2>/dev/null || true
+  step "launched: qs -c $1"
+}
+
+# append_autostart NAME — add the Hyprland exec-once line for a qs config.
+append_autostart() {
+  append_block "$AUTOSTART" "autostart-$1" "exec-once = uwsm-app -- qs -n -d -c $1"
+}
+
+# qs_bindings NAME — echo the bindings.conf block for a component.
+qs_bindings() {
+  case "$1" in
+    launcher) cat <<'EOF'
+# Themed Quickshell app launcher (overrides Omarchy's walker on SUPER+Space)
+unbind = SUPER, SPACE
+bindd = SUPER, SPACE, App launcher, exec, qs -c launcher ipc call launcher toggle
+bindd = SUPER, D, App launcher, exec, qs -c launcher ipc call launcher toggle
+EOF
+      ;;
+    power) cat <<'EOF'
+# Themed Quickshell session / power menu (overrides Omarchy's system menu)
+unbind = SUPER, ESCAPE
+bindd = SUPER, Escape, Power menu, exec, qs -c power ipc call power toggle
+EOF
+      ;;
+    overview) cat <<'EOF'
+# Workspace overview (Quickshell mini-map)
+bindd = SUPER, E, Workspace overview, exec, qs -c overview ipc call overview toggle
+EOF
+      ;;
+    visualizer) cat <<'EOF'
+# Audio visualizer (Quickshell) — toggle the spectrum strip
+bindd = SUPER, M, Audio visualizer, exec, qs -c visualizer ipc call visualizer toggle
+EOF
+      ;;
+  esac
+}
+
+# install_qs_component NAME — copy dir + shared fx, wire keybind + autostart, launch.
+install_qs_component() {
+  local name="$1"
+  install_theme_fx
+  install_dir "$REPO_ROOT/extras/quickshell/$name" "$QS_DIR/$name"
+  append_block "$BINDINGS" "$name" "$(qs_bindings "$name")"
+  append_autostart "$name"
+  qs_launch "$name"
+}
+
+# remove_qs_component NAME — reverse install_qs_component. Shared theme-fx is
+# left in place; prune_theme_fx removes it once nothing else needs it.
+remove_qs_component() {
+  local name="$1"
+  qs_kill "$name"
+  rm_path "$QS_DIR/$name"
+  remove_block "$BINDINGS" "$name"
+  remove_block "$AUTOSTART" "autostart-$name"
+}
+
+# prune_theme_fx — drop the shared shader dir only if no consumer remains (any
+# qs component or the lock screen still installed → keep it).
+prune_theme_fx() {
+  local c
+  for c in visualizer launcher power overview lock; do
+    [[ -d "$QS_DIR/$c" ]] && return 0
+  done
+  rm_path "$QS_DIR/theme-fx"
 }

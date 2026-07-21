@@ -8,10 +8,14 @@
 #
 #   --with-crt-toggle   Add a SUPER+F10 keybind + `crt-toggle` script to flip the
 #                       CRT shader on/off live (a "degauss" switch).
-#   --with-lockscreen   Also install the themed Quickshell lock screen. INVASIVE:
-#                       replaces hyprlock and edits ~/.config/hypr/hypridle.conf.
-#                       Fully reversed by ./uninstall.sh --with-lockscreen.
-#   --all               Theme + CRT toggle + lock screen.
+#   --with-lockscreen   Themed Quickshell lock screen. INVASIVE: replaces hyprlock
+#                       and edits ~/.config/hypr/hypridle.conf.
+#   --with-visualizer   Audio spectrum strip (SUPER+M). Needs `cava`.
+#   --with-launcher     Fuzzy app launcher (SUPER+Space, SUPER+D). Needs python3.
+#   --with-power        Session / power menu (SUPER+Escape).
+#   --with-overview     Workspace overview mini-map (SUPER+E).
+#   --with-shell        All four Quickshell components above.
+#   --all               Theme + CRT toggle + lock screen + shell components.
 #   --dry-run           Print actions without changing anything.
 #   -h, --help          Show this help.
 #
@@ -24,13 +28,18 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 # Theme files at the repo root (shaders/ ships inside the theme).
 THEME_FILES=(colors.toml hyprland.conf hyprlock.conf mako.ini walker.css btop.theme neovim.lua icons.theme backgrounds shaders)
 
-DO_TOGGLE=0 DO_LOCK=0
-usage() { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+DO_TOGGLE=0 DO_LOCK=0 DO_VIZ=0 DO_LAUNCHER=0 DO_POWER=0 DO_OVERVIEW=0
+usage() { sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-crt-toggle) DO_TOGGLE=1 ;;
     --with-lockscreen) DO_LOCK=1 ;;
-    --all)             DO_TOGGLE=1; DO_LOCK=1 ;;
+    --with-visualizer) DO_VIZ=1 ;;
+    --with-launcher)   DO_LAUNCHER=1 ;;
+    --with-power)      DO_POWER=1 ;;
+    --with-overview)   DO_OVERVIEW=1 ;;
+    --with-shell)      DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
+    --all)             DO_TOGGLE=1; DO_LOCK=1; DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
     --dry-run)         DRY_RUN=1 ;;
     -h|--help)         usage 0 ;;
     *) err "unknown argument: $1"; usage 1 ;;
@@ -88,10 +97,38 @@ EOF
   ok "installed: lockscreen; hyprlock kept as fallback"
 }
 
+# ── Quickshell components (thin wrappers around install_qs_component) ────────
+comp_visualizer() {
+  info "Audio visualizer (SUPER+M)"
+  install_qs_component visualizer
+  command -v cava >/dev/null || warn "cava is not installed — the visualizer needs it (e.g. 'omarchy pkg add cava' or 'sudo pacman -S cava')"
+  ok "installed: visualizer"
+}
+comp_launcher() {
+  info "App launcher (SUPER+Space, SUPER+D)"
+  install_qs_component launcher
+  command -v python3 >/dev/null || warn "python3 not found — the launcher's app scan (list-apps.py) needs it"
+  ok "installed: launcher"
+}
+comp_power() {
+  info "Session / power menu (SUPER+Escape)"
+  install_qs_component power
+  ok "installed: power"
+}
+comp_overview() {
+  info "Workspace overview (SUPER+E)"
+  install_qs_component overview
+  ok "installed: overview"
+}
+
 info "Installing into ${DEST_HOME} $([[ $DRY_RUN == 1 ]] && echo '(dry-run)')"
 comp_theme
 [[ $DO_TOGGLE == 1 ]] && comp_toggle
 [[ $DO_LOCK == 1 ]] && comp_lockscreen
+[[ $DO_VIZ == 1 ]] && comp_visualizer
+[[ $DO_LAUNCHER == 1 ]] && comp_launcher
+[[ $DO_POWER == 1 ]] && comp_power
+[[ $DO_OVERVIEW == 1 ]] && comp_overview
 if [[ $DO_TOGGLE == 1 || $DO_LOCK == 1 ]]; then
   [[ ":$PATH:" == *":$BIN_DIR:"* ]] || warn "$BIN_DIR is not on \$PATH — installed scripts won't be found until it is."
 fi
@@ -107,3 +144,10 @@ fi
 
 echo
 ok "Done. Apply with:  omarchy theme set \"Playstation 1\""
+if [[ $((DO_VIZ + DO_LAUNCHER + DO_POWER + DO_OVERVIEW)) -gt 0 ]]; then
+  info "Quickshell extras are live now and autostart on next login. Keybinds:"
+  [[ $DO_VIZ == 1 ]]      && step "SUPER+M       audio visualizer"
+  [[ $DO_LAUNCHER == 1 ]] && step "SUPER+Space   app launcher   (also SUPER+D)"
+  [[ $DO_POWER == 1 ]]    && step "SUPER+Escape  power menu"
+  [[ $DO_OVERVIEW == 1 ]] && step "SUPER+E       workspace overview"
+fi

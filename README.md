@@ -20,6 +20,7 @@ A retro [Omarchy](https://omarchy.org/) theme channeling the original Sony PlayS
 - **Built-in CRT shader** — scanlines, RGB aperture grille, barrel curvature with a black bezel, chromatic aberration, phosphor bloom and vignette. Tuned to read on HiDPI panels. **Auto-applies with the theme; clears when you switch away.**
 - **Native install** — the theme *and* the CRT install with Omarchy's one-line theme manager (the shader ships inside the theme).
 - **Optional `SUPER+F10` degauss toggle** and an optional themed lock screen.
+- **Optional Quickshell desktop suite** — a themed audio visualizer (a *flowing current of the ✕ △ □ ○ glyphs*), app launcher, power menu, and workspace overview. Opt-in and fully reversible.
 - Every shader effect is a labeled constant — tune it in seconds.
 
 ## 🎨 Palette
@@ -48,7 +49,7 @@ omarchy theme install https://github.com/Mhsbrian/omarchy-playstation-1-theme.gi
 Installs the theme **with the CRT shader** and applies it. The shader lives
 inside the theme and turns on automatically.
 
-### Option B — Script (adds the F10 toggle and/or lock screen)
+### Option B — Script (adds the F10 toggle, lock screen, and/or Quickshell suite)
 
 ```bash
 git clone https://github.com/Mhsbrian/omarchy-playstation-1-theme.git
@@ -56,8 +57,12 @@ cd omarchy-playstation-1-theme
 
 ./install.sh                     # theme + CRT
 ./install.sh --with-crt-toggle   # + SUPER+F10 degauss toggle
-./install.sh --all               # + toggle + themed lock screen
+./install.sh --with-shell        # + visualizer, launcher, power menu, overview
+./install.sh --all               # everything (toggle + lock screen + Quickshell suite)
 ```
+
+Pick individual extras with `--with-visualizer`, `--with-launcher`, `--with-power`,
+`--with-overview`, or `--with-lockscreen`. Run `./install.sh --help` for the full list.
 
 Then apply:
 
@@ -72,6 +77,7 @@ Preview any run with `--dry-run`. Details in [docs/INSTALLATION.md](docs/INSTALL
 ```bash
 ./uninstall.sh                       # remove theme, CRT, toggle
 ./uninstall.sh --with-lockscreen     # also restore the default hyprlock flow
+./uninstall.sh --with-shell          # also remove the Quickshell suite
 ```
 
 ---
@@ -101,6 +107,8 @@ colors.toml, hyprland.conf, hyprlock.conf, mako.ini, walker.css, btop.theme,
 neovim.lua, icons.theme, backgrounds/, shaders/crt-ps1.glsl   ← theme (repo root)
 extras/bin/crt-toggle              ← optional SUPER+F10 toggle
 extras/lockscreen/                 ← optional themed Quickshell lock
+extras/quickshell/                 ← optional suite: visualizer, launcher,
+                                      power, overview, shared theme-fx/
 install.sh · uninstall.sh · lib/   ← installer
 docs/                              ← guides, CRT deep-dive, screenshots
 ```
@@ -113,10 +121,29 @@ that replaces `hyprlock`. It's **invasive** (edits `hypridle.conf`, rebinds
 up your config first. Test it once at your keyboard before relying on the idle
 lock. See [docs/INSTALLATION.md](docs/INSTALLATION.md#optional-lock-screen).
 
+## 🖥️ Optional Quickshell desktop suite
+
+`--with-shell` installs four themed, standalone Quickshell components. Each reads
+the active theme's `colors.toml` and adapts, adds a keybind + an autostart entry
+(marker-managed, fully reversible), and starts immediately:
+
+| Component | Keybind | What it is |
+|-----------|---------|------------|
+| **Audio visualizer** | `SUPER+M` | A bottom-edge `cava` spectrum. On PlayStation it's a *flowing current of the ✕ △ □ ○ glyphs* in the four face-button colors, drifting and riding the audio like symbols on water. Needs [`cava`](https://github.com/karlstav/cava). |
+| **App launcher** | `SUPER+Space` (also `SUPER+D`) | Fuzzy application search with icons. Overrides Omarchy's `walker` launcher. Needs `python3`. |
+| **Power menu** | `SUPER+Escape` | Lock / suspend / log out / restart / shut down. Overrides Omarchy's system menu. |
+| **Workspace overview** | `SUPER+E` | A live mini-map of every workspace and its windows. |
+
+Install them together with `--with-shell`, or cherry-pick individual flags. The
+four share a small `theme-fx/` shader directory (installed once, pruned on
+uninstall once nothing else needs it). Remove with `./uninstall.sh --with-shell`.
+
 ## 📋 Requirements
 
 Omarchy (Hyprland with `decoration:screen_shader`, GLES 3.0). Optional scripts
-need `~/.local/bin` on your `$PATH`; the lock screen also needs `quickshell`.
+need `~/.local/bin` on your `$PATH`; the lock screen and Quickshell suite need
+`quickshell`, the **visualizer** additionally needs `cava`, and the **launcher**
+needs `python3`.
 
 ## 📜 License
 

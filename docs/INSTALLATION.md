@@ -28,8 +28,15 @@ cd omarchy-playstation-1-theme
 | `./install.sh` | PlayStation 1 theme + CRT shader |
 | `./install.sh --with-crt-toggle` | + `SUPER+F10` degauss toggle |
 | `./install.sh --with-lockscreen` | + themed lock screen |
-| `./install.sh --all` | theme + toggle + lock screen |
+| `./install.sh --with-visualizer` | + audio visualizer (`SUPER+M`, needs `cava`) |
+| `./install.sh --with-launcher` | + app launcher (`SUPER+Space` / `SUPER+D`, needs `python3`) |
+| `./install.sh --with-power` | + power menu (`SUPER+Escape`) |
+| `./install.sh --with-overview` | + workspace overview (`SUPER+E`) |
+| `./install.sh --with-shell` | + all four Quickshell components above |
+| `./install.sh --all` | theme + toggle + lock screen + Quickshell suite |
 | `./install.sh --dry-run …` | print every action, change nothing |
+
+Flags stack freely (e.g. `--with-crt-toggle --with-visualizer --with-power`).
 
 Apply afterward:
 
@@ -48,8 +55,35 @@ omarchy theme set "Playstation 1"
 | Lock scripts | `~/.local/bin/rise-lock`, `rise-system-lock` |
 | Lock keybind | managed block in `~/.config/hypr/bindings.conf` |
 | Lock idle wiring | `~/.config/hypr/hypridle.conf` (reversible) |
+| Quickshell component | `~/.config/quickshell/{visualizer,launcher,power,overview}/` |
+| Shared shaders | `~/.config/quickshell/theme-fx/` (installed once) |
+| Component keybinds | managed blocks in `~/.config/hypr/bindings.conf` |
+| Component autostart | managed blocks in `~/.config/hypr/autostart.conf` |
 
 See [CRT-SHADER.md](CRT-SHADER.md) for tuning the shader.
+
+---
+
+## Optional Quickshell suite
+
+`--with-shell` (or the individual `--with-visualizer` / `--with-launcher` /
+`--with-power` / `--with-overview` flags) installs standalone Quickshell
+components that read the active theme's `colors.toml` and adapt.
+
+**What each adds:** its config under `~/.config/quickshell/<name>/`, a
+marker-wrapped keybind block in `bindings.conf`, and a marker-wrapped
+`exec-once` line in `autostart.conf`. On the live host the component also starts
+immediately. The four share `theme-fx/` (installed once).
+
+| Component | Keybind | Overrides | Extra dependency |
+|-----------|---------|-----------|------------------|
+| Visualizer | `SUPER+M` | — | `cava` |
+| Launcher | `SUPER+Space`, `SUPER+D` | Omarchy's `walker` | `python3` |
+| Power menu | `SUPER+Escape` | Omarchy's system menu | — |
+| Overview | `SUPER+E` | — | — |
+
+Remove with `./uninstall.sh --with-shell` (or the matching individual flag);
+`theme-fx/` is pruned automatically once no component or the lock screen needs it.
 
 ---
 
@@ -82,7 +116,8 @@ See [CRT-SHADER.md](CRT-SHADER.md) for tuning the shader.
 ```bash
 ./uninstall.sh                    # remove theme, CRT shader, F10 toggle
 ./uninstall.sh --with-lockscreen  # + restore default hyprlock flow
-./uninstall.sh --keep-theme --with-lockscreen   # remove only the lock screen
+./uninstall.sh --with-shell       # + remove the Quickshell suite
+./uninstall.sh --keep-theme --with-shell   # remove only the Quickshell suite
 ```
 
 If you're removing the active theme, switch to another first — Omarchy runs from
