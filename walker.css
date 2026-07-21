@@ -1,0 +1,36 @@
+@define-color selected-text #FFDE59;
+@define-color text #C9CDC4;
+@define-color base #0A0A0C;
+@define-color border #C9CDC4;
+@define-color foreground #C9CDC4;
+@define-color background #0A0A0C;
+
+/* PS1 HUD chrome. This file is @import'ed before omarchy-default/style.css,
+   so every rule is prefixed with `window` to win the cascade on specificity. */
+
+window * {
+  font-family: "Share Tech Mono";
+  font-size: 19px;
+}
+
+window .box-wrapper {
+  background: alpha(#0A0A0C, 0.94);
+  border: 1px solid alpha(#C9CDC4, 0.55);
+  outline: 1px solid alpha(#2E8AE6, 0.55);
+  outline-offset: -5px;
+  padding: 20px;
+}
+
+window .search-container {
+  background: alpha(#1A1A1E, 0.7);
+  border: 1px solid alpha(#C9CDC4, 0.25);
+  padding: 10px;
+}
+
+window child:selected {
+  background: alpha(#2E8AE6, 0.20);
+}
+
+window child:selected .item-box * {
+  color: #FFDE59;
+}

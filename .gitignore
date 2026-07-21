@@ -1,0 +1,9 @@
+# Installer safety backups (created in ~/.config, never here — belt & suspenders)
+*.omarchy-themes.orig
+*.bak
+*.bak.*
+
+# Editor / OS cruft
+*.swp
+*~
+.DS_Store

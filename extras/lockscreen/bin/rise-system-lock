@@ -1,0 +1,43 @@
+#!/bin/bash
+# Themed-lockscreen drop-in for omarchy-system-lock.
+#
+# Mirrors omarchy-system-lock's ancillary behavior (1Password lock, keyboard
+# layout reset, brightness off, screensaver kill) but shows the Quickshell
+# themed lock instead of hyprlock. Nothing in ~/.local/share/omarchy is
+# modified — revert by pointing your lock triggers back at omarchy-system-lock.
+#
+# Respects OMARCHY_LOCK_ONLY=true (used by hypridle before_sleep_cmd) exactly
+# as the original does.
+
+LOCK_NS="qs (-[nd] )*-c lock"
+
+# Launch the themed lock if no lock is already up. omarchy-system-wake runs
+# after it exits, matching the original's post-hyprlock cleanup.
+if ! pgrep -f "$LOCK_NS" >/dev/null && ! pidof hyprlock >/dev/null; then
+  (
+    qs -c lock
+    omarchy-system-wake
+  ) &
+fi
+
+# Reset keyboard layout to the first configured layout
+hyprctl switchxkblayout all 0 >/dev/null 2>&1
+
+# Ensure 1Password is locked
+if pgrep -x "1password" >/dev/null; then
+  1password --lock &
+fi
+
+# Don't run the screensaver while locked
+pkill -f org.omarchy.screensaver
+
+# Turn off displays/keyboard backlight shortly after locking (skipped for
+# lock-before-sleep, where the system is about to suspend anyway)
+if [[ ${OMARCHY_LOCK_ONLY:-false} != "true" ]]; then
+  (
+    sleep 3
+    pgrep -f "$LOCK_NS" >/dev/null || exit 0
+    omarchy-brightness-keyboard off
+    omarchy-brightness-display off
+  ) &
+fi

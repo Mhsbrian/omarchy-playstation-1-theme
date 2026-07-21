@@ -1,0 +1,99 @@
+# Installation guide — PlayStation 1
+
+Two ways to install: Omarchy's native theme manager (fastest, includes the CRT)
+or the bundled script (adds the F10 toggle and optional lock screen).
+
+---
+
+## 1. Native install (theme + CRT)
+
+```bash
+omarchy theme install https://github.com/Mhsbrian/omarchy-playstation-1-theme.git
+```
+
+Omarchy clones the repo into `~/.config/omarchy/themes/playstation-1` and applies
+it. The CRT shader ships inside the theme and turns on automatically. That's the
+whole experience — the script below only adds convenience extras.
+
+## 2. Script install
+
+```bash
+git clone https://github.com/Mhsbrian/omarchy-playstation-1-theme.git
+cd omarchy-playstation-1-theme
+./install.sh [options]
+```
+
+| Command | Installs |
+|---------|----------|
+| `./install.sh` | PlayStation 1 theme + CRT shader |
+| `./install.sh --with-crt-toggle` | + `SUPER+F10` degauss toggle |
+| `./install.sh --with-lockscreen` | + themed lock screen |
+| `./install.sh --all` | theme + toggle + lock screen |
+| `./install.sh --dry-run …` | print every action, change nothing |
+
+Apply afterward:
+
+```bash
+omarchy theme set "Playstation 1"
+```
+
+### Where files go
+
+| Component | Destination |
+|-----------|-------------|
+| Theme + CRT shader | `~/.config/omarchy/themes/playstation-1/` (incl. `shaders/`) |
+| CRT toggle script | `~/.local/bin/crt-toggle` |
+| CRT toggle keybind | managed block in `~/.config/hypr/bindings.conf` |
+| Lock screen | `~/.config/quickshell/lock/` |
+| Lock scripts | `~/.local/bin/rise-lock`, `rise-system-lock` |
+| Lock keybind | managed block in `~/.config/hypr/bindings.conf` |
+| Lock idle wiring | `~/.config/hypr/hypridle.conf` (reversible) |
+
+See [CRT-SHADER.md](CRT-SHADER.md) for tuning the shader.
+
+---
+
+## Optional lock screen
+
+`--with-lockscreen` replaces `hyprlock` with a themed Quickshell lock screen
+(a PlayStation memory-card look).
+
+**What it changes:**
+- Adds `~/.config/quickshell/lock/` and the `rise-*` scripts.
+- Rebinds `SUPER+CTRL+L` (managed, marker-wrapped block).
+- Edits `hypridle.conf` so idle/before-sleep locks use the themed lock, and
+  teaches the screensaver guard to detect it. A pristine backup is written to
+  `hypridle.conf.omarchy-themes.orig` first.
+
+**Safety:**
+- `hyprlock` stays installed as a fallback.
+- `./uninstall.sh --with-lockscreen` reverses everything exactly.
+- **Test it once at your keyboard** (`SUPER+CTRL+L`) before trusting the idle
+  lock. If a lock misbehaves: `Ctrl+Alt+F2` to a TTY, `pkill -f 'qs -c lock'`,
+  back with `Ctrl+Alt+F1`.
+
+**Requirements:** `quickshell`, a compositor implementing `ext-session-lock-v1`
+(Hyprland does), and `~/.local/bin` on your `$PATH`.
+
+---
+
+## Uninstall
+
+```bash
+./uninstall.sh                    # remove theme, CRT shader, F10 toggle
+./uninstall.sh --with-lockscreen  # + restore default hyprlock flow
+./uninstall.sh --keep-theme --with-lockscreen   # remove only the lock screen
+```
+
+If you're removing the active theme, switch to another first — Omarchy runs from
+a copy, so the live look lingers until you switch.
+
+## Troubleshooting
+
+- **Screen goes black when the CRT loads** — your Hyprland/GPU may not support
+  `decoration:screen_shader` (GLES 3.0). Clear it with
+  `hyprctl keyword decoration:screen_shader ""` and check `hyprland.log`.
+- **CRT looks too heavy** — you're likely on a lower-DPI display; see the
+  "subtle" preset in [CRT-SHADER.md](CRT-SHADER.md).
+- **`~/.local/bin is not on your $PATH`** — the toggle/lock scripts won't be
+  found until you add it (Omarchy usually has it already).

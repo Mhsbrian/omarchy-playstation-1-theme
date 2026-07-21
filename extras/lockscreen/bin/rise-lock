@@ -1,0 +1,6 @@
+#!/bin/bash
+# Themed Quickshell lockscreen launcher.
+# Refuses to stack on an existing lock (hyprlock or another instance).
+pidof hyprlock >/dev/null && exit 0
+pgrep -f "qs (-[nd] )*-c lock" >/dev/null && exit 0
+exec qs -c lock

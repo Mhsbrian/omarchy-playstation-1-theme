@@ -1,0 +1,14 @@
+#!/bin/bash
+# Toggle the PlayStation 1 CRT screen shader ("degauss", bound to SUPER+F10).
+# The shader ships inside the theme, so this resolves through the active theme.
+# A Hyprland reload (e.g. a theme switch) resets to whatever the active theme
+# declares in its own hyprland.conf.
+SHADER="$HOME/.config/omarchy/current/theme/shaders/crt-ps1.glsl"
+
+current=$(hyprctl getoption decoration:screen_shader -j | jq -r '.str')
+# Unset reports the sentinel [[EMPTY]]; cleared-via-keyword reports "".
+if [[ -z "$current" || "$current" == "null" || "$current" == "[[EMPTY]]" ]]; then
+  hyprctl keyword decoration:screen_shader "$SHADER"
+else
+  hyprctl keyword decoration:screen_shader ""
+fi
