@@ -212,3 +212,74 @@ prune_theme_fx() {
   done
   rm_path "$QS_DIR/theme-fx"
 }
+
+# ── Dependency preflight ─────────────────────────────────────────────────
+# The installer records the runtime binaries each selected extra needs with
+# require_dep BIN PKG, then calls preflight_deps to report status and — for
+# anything missing — offer to install the packages via sudo pacman. Honors
+# SKIP_DEPS=1 (--skip-deps) and ASSUME_YES=1 (--yes/-y).
+declare -A DEP_PKG=()   # binary -> pacman package that provides it
+DEP_WHY=""              # optional trailing note (unused hook)
+
+# require_dep BIN PKG — record that BIN is needed, provided by pacman package PKG.
+require_dep() { DEP_PKG["$1"]="$2"; }
+
+# preflight_deps — verify recorded dependencies; install missing ones on request.
+preflight_deps() {
+  [[ ${SKIP_DEPS:-0} == 1 ]] && { info "Dependency check skipped (--skip-deps)"; return 0; }
+  [[ ${#DEP_PKG[@]} -eq 0 ]] && return 0
+
+  info "Checking dependencies"
+  local bin pkg width=0
+  for bin in "${!DEP_PKG[@]}"; do [[ ${#bin} -gt $width ]] && width=${#bin} || true; done
+
+  local -a missing=()
+  while IFS= read -r bin; do
+    pkg="${DEP_PKG[$bin]}"
+    if command -v "$bin" >/dev/null 2>&1; then
+      printf '%s  ✓%s %-*s %sfound%s\n'   "$_c_green"  "$_c_off" "$width" "$bin" "$_c_dim"    "$_c_off"
+    else
+      printf '%s  ✗%s %-*s %smissing%s  (package: %s)\n' "$_c_red" "$_c_off" "$width" "$bin" "$_c_yellow" "$_c_off" "$pkg"
+      missing+=("$pkg")
+    fi
+  done < <(printf '%s\n' "${!DEP_PKG[@]}" | sort)
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    ok "all dependencies satisfied"
+    return 0
+  fi
+
+  # de-duplicate the package list (two binaries can share a package)
+  local -a pkgs=(); local p
+  while IFS= read -r p; do pkgs+=("$p"); done < <(printf '%s\n' "${missing[@]}" | sort -u)
+
+  echo
+  warn "${#pkgs[@]} package(s) not installed: ${pkgs[*]}"
+
+  # Never touch the real system in a dry-run or a throwaway-home test.
+  if [[ $DRY_RUN == 1 || $DEST_HOME != "$HOME" ]]; then
+    step "[dry-run] would install:  sudo pacman -S --needed ${pkgs[*]}"
+    return 0
+  fi
+  if ! command -v pacman >/dev/null; then
+    warn "pacman not found — install these yourself before using the extras: ${pkgs[*]}"
+    return 0
+  fi
+
+  local ans="y"
+  if [[ ${ASSUME_YES:-0} != 1 ]]; then
+    printf '%s==>%s Install now with:  %ssudo pacman -S --needed %s%s\n' "$_c_blue" "$_c_off" "$_c_dim" "${pkgs[*]}" "$_c_off"
+    printf '    You will be prompted for your sudo password.\n'
+    read -r -p "    Proceed? [Y/n] " ans || ans="n"
+  fi
+  case "${ans:-y}" in
+    [nN]*) warn "skipped — the affected extras won't run until installed: ${pkgs[*]}"; return 0 ;;
+  esac
+
+  info "Installing packages (sudo)…"
+  if sudo pacman -S --needed --noconfirm "${pkgs[@]}"; then
+    ok "dependencies installed: ${pkgs[*]}"
+  else
+    warn "package install failed or was cancelled — install manually: ${pkgs[*]}"
+  fi
+}

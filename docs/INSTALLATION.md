@@ -38,6 +38,15 @@ cd omarchy-playstation-1-theme
 
 Flags stack freely (e.g. `--with-crt-toggle --with-visualizer --with-power`).
 
+### Runtime dependencies
+
+The Quickshell extras need a few packages: `quickshell` (all four), `cava` (the
+visualizer), and `python` (the launcher). `install.sh` checks these up front,
+prints exactly what's missing, and — with your confirmation — installs them via
+`sudo pacman` (you'll be prompted for your password). Auto-confirm with `--yes`,
+or manage them yourself with `--skip-deps`. The check never runs `sudo` under
+`--dry-run`.
+
 Apply afterward:
 
 ```bash

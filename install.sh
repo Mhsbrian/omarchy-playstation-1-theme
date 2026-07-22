@@ -16,8 +16,13 @@
 #   --with-overview     Workspace overview mini-map (SUPER+E).
 #   --with-shell        All four Quickshell components above.
 #   --all               Theme + CRT toggle + lock screen + shell components.
+#   --yes, -y           Assume "yes" to the package-install prompt.
+#   --skip-deps         Skip the runtime dependency check/install entirely.
 #   --dry-run           Print actions without changing anything.
 #   -h, --help          Show this help.
+#
+# Extras that need runtime packages (quickshell, cava, python) are checked first;
+# anything missing is listed and — with your confirmation — installed via sudo.
 #
 # Tip: the theme + CRT also install natively with:
 #   omarchy theme install https://github.com/Mhsbrian/omarchy-playstation-1-theme.git
@@ -29,7 +34,8 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 THEME_FILES=(colors.toml hyprland.conf hyprlock.conf mako.ini walker.css btop.theme neovim.lua icons.theme backgrounds shaders)
 
 DO_TOGGLE=0 DO_LOCK=0 DO_VIZ=0 DO_LAUNCHER=0 DO_POWER=0 DO_OVERVIEW=0
-usage() { sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+ASSUME_YES=0 SKIP_DEPS=0
+usage() { sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-crt-toggle) DO_TOGGLE=1 ;;
@@ -40,6 +46,8 @@ while [[ $# -gt 0 ]]; do
     --with-overview)   DO_OVERVIEW=1 ;;
     --with-shell)      DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
     --all)             DO_TOGGLE=1; DO_LOCK=1; DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
+    --yes|-y)          ASSUME_YES=1 ;;
+    --skip-deps)       SKIP_DEPS=1 ;;
     --dry-run)         DRY_RUN=1 ;;
     -h|--help)         usage 0 ;;
     *) err "unknown argument: $1"; usage 1 ;;
@@ -122,6 +130,13 @@ comp_overview() {
 }
 
 info "Installing into ${DEST_HOME} $([[ $DRY_RUN == 1 ]] && echo '(dry-run)')"
+
+# Verify (and offer to install) the runtime packages the selected extras need.
+[[ $DO_LOCK == 1 || $DO_VIZ == 1 || $DO_LAUNCHER == 1 || $DO_POWER == 1 || $DO_OVERVIEW == 1 ]] && require_dep qs quickshell
+[[ $DO_VIZ == 1 ]] && require_dep cava cava
+[[ $DO_LAUNCHER == 1 ]] && require_dep python3 python
+preflight_deps
+
 comp_theme
 [[ $DO_TOGGLE == 1 ]] && comp_toggle
 [[ $DO_LOCK == 1 ]] && comp_lockscreen

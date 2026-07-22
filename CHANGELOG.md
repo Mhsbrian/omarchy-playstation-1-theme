@@ -18,6 +18,11 @@ All notable changes to this theme are documented here. Format loosely follows
 - New install/uninstall flags: `--with-visualizer`, `--with-launcher`,
   `--with-power`, `--with-overview`, and `--with-shell` (all four). `--all` now
   also includes the suite.
+- Installer **dependency preflight**: checks the runtime packages the selected
+  extras need (`quickshell`, `cava`, `python`), reports which are missing, and —
+  with your confirmation — installs them via `sudo pacman`. New `--yes` and
+  `--skip-deps` flags; safe under `--dry-run` and throwaway-home tests (never
+  invokes `sudo` there).
 - Shared `extras/quickshell/theme-fx/` shader dir, installed once and pruned on
   uninstall when no component (or the lock screen) still needs it.
 

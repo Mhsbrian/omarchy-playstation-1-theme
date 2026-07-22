@@ -143,7 +143,10 @@ uninstall once nothing else needs it). Remove with `./uninstall.sh --with-shell`
 Omarchy (Hyprland with `decoration:screen_shader`, GLES 3.0). Optional scripts
 need `~/.local/bin` on your `$PATH`; the lock screen and Quickshell suite need
 `quickshell`, the **visualizer** additionally needs `cava`, and the **launcher**
-needs `python3`.
+needs `python3`. You don't have to hunt these down — `install.sh` checks the
+packages the extras you picked require, lists anything missing, and (with your
+confirmation) installs them via `sudo pacman`. Skip that step with `--skip-deps`,
+or auto-confirm with `--yes`.
 
 ## 📜 License
 
