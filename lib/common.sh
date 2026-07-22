@@ -213,6 +213,31 @@ prune_theme_fx() {
   rm_path "$QS_DIR/theme-fx"
 }
 
+# ── Themed notifications (INVASIVE: replaces mako's popups) ───────────────
+# The notification server owns org.freedesktop.Notifications, so mako must go.
+# Omarchy's default autostart launches mako; our exec-once runs after it, kills
+# it (retry to cover a late start), and takes the bus. No keybind (passive).
+install_notifications() {
+  install_dir "$REPO_ROOT/extras/quickshell/notifications" "$QS_DIR/notifications"
+  append_block "$AUTOSTART" "autostart-notifications" \
+    "exec-once = uwsm-app -- bash -lc 'for i in 1 2 3; do pkill -x mako 2>/dev/null; sleep 0.4; done; exec qs -n -d -c notifications'"
+  if is_live_env; then
+    for i in 1 2 3; do pkill -x mako 2>/dev/null; sleep 0.3; done
+    command -v qs >/dev/null && { setsid qs -n -d -c notifications >/dev/null 2>&1 < /dev/null & disown 2>/dev/null || true; }
+    step "replaced mako with the themed notification server"
+  fi
+}
+
+remove_notifications() {
+  qs_kill notifications
+  rm_path "$QS_DIR/notifications"
+  remove_block "$AUTOSTART" "autostart-notifications"
+  if is_live_env && command -v mako >/dev/null; then
+    setsid uwsm-app -- mako >/dev/null 2>&1 < /dev/null & disown 2>/dev/null || true
+    step "restored mako"
+  fi
+}
+
 # ── Dependency preflight ─────────────────────────────────────────────────
 # The installer records the runtime binaries each selected extra needs with
 # require_dep BIN PKG, then calls preflight_deps to report status and — for

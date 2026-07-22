@@ -10,6 +10,7 @@
 #                       CRT shader on/off live (a "degauss" switch).
 #   --with-lockscreen   Themed Quickshell lock screen. INVASIVE: replaces hyprlock
 #                       and edits ~/.config/hypr/hypridle.conf.
+#   --with-notifications  Themed notification popups. INVASIVE: replaces mako.
 #   --with-visualizer   Audio spectrum strip (SUPER+M). Needs `cava`.
 #   --with-launcher     Fuzzy app launcher (SUPER+Space, SUPER+D). Needs python3.
 #   --with-power        Session / power menu (SUPER+Escape).
@@ -33,19 +34,20 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 # Theme files at the repo root (shaders/ ships inside the theme).
 THEME_FILES=(colors.toml hyprland.conf hyprlock.conf mako.ini walker.css btop.theme neovim.lua icons.theme backgrounds shaders)
 
-DO_TOGGLE=0 DO_LOCK=0 DO_VIZ=0 DO_LAUNCHER=0 DO_POWER=0 DO_OVERVIEW=0
+DO_TOGGLE=0 DO_LOCK=0 DO_NOTIF=0 DO_VIZ=0 DO_LAUNCHER=0 DO_POWER=0 DO_OVERVIEW=0
 ASSUME_YES=0 SKIP_DEPS=0
-usage() { sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --with-crt-toggle) DO_TOGGLE=1 ;;
-    --with-lockscreen) DO_LOCK=1 ;;
-    --with-visualizer) DO_VIZ=1 ;;
-    --with-launcher)   DO_LAUNCHER=1 ;;
-    --with-power)      DO_POWER=1 ;;
-    --with-overview)   DO_OVERVIEW=1 ;;
-    --with-shell)      DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
-    --all)             DO_TOGGLE=1; DO_LOCK=1; DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
+    --with-crt-toggle)    DO_TOGGLE=1 ;;
+    --with-lockscreen)    DO_LOCK=1 ;;
+    --with-notifications) DO_NOTIF=1 ;;
+    --with-visualizer)    DO_VIZ=1 ;;
+    --with-launcher)      DO_LAUNCHER=1 ;;
+    --with-power)         DO_POWER=1 ;;
+    --with-overview)      DO_OVERVIEW=1 ;;
+    --with-shell)         DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
+    --all)                DO_TOGGLE=1; DO_LOCK=1; DO_NOTIF=1; DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
     --yes|-y)          ASSUME_YES=1 ;;
     --skip-deps)       SKIP_DEPS=1 ;;
     --dry-run)         DRY_RUN=1 ;;
@@ -128,11 +130,16 @@ comp_overview() {
   install_qs_component overview
   ok "installed: overview"
 }
+comp_notifications() {
+  info "Themed notifications (invasive — replaces mako)"
+  install_notifications
+  ok "installed: notifications; mako replaced (reverse with ./uninstall.sh --with-notifications)"
+}
 
 info "Installing into ${DEST_HOME} $([[ $DRY_RUN == 1 ]] && echo '(dry-run)')"
 
 # Verify (and offer to install) the runtime packages the selected extras need.
-[[ $DO_LOCK == 1 || $DO_VIZ == 1 || $DO_LAUNCHER == 1 || $DO_POWER == 1 || $DO_OVERVIEW == 1 ]] && require_dep qs quickshell
+[[ $DO_LOCK == 1 || $DO_NOTIF == 1 || $DO_VIZ == 1 || $DO_LAUNCHER == 1 || $DO_POWER == 1 || $DO_OVERVIEW == 1 ]] && require_dep qs quickshell
 [[ $DO_VIZ == 1 ]] && require_dep cava cava
 [[ $DO_LAUNCHER == 1 ]] && require_dep python3 python
 preflight_deps
@@ -140,6 +147,7 @@ preflight_deps
 comp_theme
 [[ $DO_TOGGLE == 1 ]] && comp_toggle
 [[ $DO_LOCK == 1 ]] && comp_lockscreen
+[[ $DO_NOTIF == 1 ]] && comp_notifications
 [[ $DO_VIZ == 1 ]] && comp_visualizer
 [[ $DO_LAUNCHER == 1 ]] && comp_launcher
 [[ $DO_POWER == 1 ]] && comp_power

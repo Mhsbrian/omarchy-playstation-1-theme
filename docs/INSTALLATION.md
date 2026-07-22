@@ -28,6 +28,7 @@ cd omarchy-playstation-1-theme
 | `./install.sh` | PlayStation 1 theme + CRT shader |
 | `./install.sh --with-crt-toggle` | + `SUPER+F10` degauss toggle |
 | `./install.sh --with-lockscreen` | + themed lock screen |
+| `./install.sh --with-notifications` | + PS1 BIOS-dialog notifications (**replaces mako**) |
 | `./install.sh --with-visualizer` | + audio visualizer (`SUPER+M`, needs `cava`) |
 | `./install.sh --with-launcher` | + app launcher (`SUPER+Space` / `SUPER+D`, needs `python3`) |
 | `./install.sh --with-power` | + power menu (`SUPER+Escape`) |

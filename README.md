@@ -21,6 +21,7 @@ A retro [Omarchy](https://omarchy.org/) theme channeling the original Sony PlayS
 - **Native install** — the theme *and* the CRT install with Omarchy's one-line theme manager (the shader ships inside the theme).
 - **Optional `SUPER+F10` degauss toggle** and an optional themed lock screen.
 - **Optional Quickshell desktop suite** — a themed audio visualizer (a *flowing current of the ✕ △ □ ○ glyphs*), app launcher, power menu, and workspace overview. Opt-in and fully reversible.
+- **Optional themed notifications** — desktop notifications as **PS1 BIOS dialogs** (deep-blue bevel, four face-button strip, CRT flicker). Opt-in; replaces mako and fully reverses.
 - Every shader effect is a labeled constant — tune it in seconds.
 
 ## 🎨 Palette
@@ -58,11 +59,13 @@ cd omarchy-playstation-1-theme
 ./install.sh                     # theme + CRT
 ./install.sh --with-crt-toggle   # + SUPER+F10 degauss toggle
 ./install.sh --with-shell        # + visualizer, launcher, power menu, overview
-./install.sh --all               # everything (toggle + lock screen + Quickshell suite)
+./install.sh --with-notifications  # + PS1 BIOS-dialog notifications (replaces mako)
+./install.sh --all               # everything (toggle + lock + notifications + suite)
 ```
 
 Pick individual extras with `--with-visualizer`, `--with-launcher`, `--with-power`,
-`--with-overview`, or `--with-lockscreen`. Run `./install.sh --help` for the full list.
+`--with-overview`, `--with-notifications`, or `--with-lockscreen`. Run
+`./install.sh --help` for the full list.
 
 Then apply:
 

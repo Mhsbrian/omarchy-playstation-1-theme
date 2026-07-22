@@ -5,6 +5,7 @@
 #
 #   --with-lockscreen   Also remove the themed lock screen and restore the
 #                       default hyprlock flow (reverses hypridle + keybind).
+#   --with-notifications  Remove themed notifications and restore mako.
 #   --with-visualizer   Remove the audio visualizer (keybind + autostart).
 #   --with-launcher     Remove the app launcher (keybind + autostart).
 #   --with-power        Remove the power menu (keybind + autostart).
@@ -20,18 +21,19 @@
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 
-DO_LOCK=0 KEEP_THEME=0 DO_VIZ=0 DO_LAUNCHER=0 DO_POWER=0 DO_OVERVIEW=0
-usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+DO_LOCK=0 KEEP_THEME=0 DO_NOTIF=0 DO_VIZ=0 DO_LAUNCHER=0 DO_POWER=0 DO_OVERVIEW=0
+usage() { sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --with-lockscreen) DO_LOCK=1 ;;
-    --with-visualizer) DO_VIZ=1 ;;
-    --with-launcher)   DO_LAUNCHER=1 ;;
-    --with-power)      DO_POWER=1 ;;
-    --with-overview)   DO_OVERVIEW=1 ;;
-    --with-shell)      DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
-    --keep-theme)      KEEP_THEME=1 ;;
-    --dry-run)         DRY_RUN=1 ;;
+    --with-lockscreen)    DO_LOCK=1 ;;
+    --with-notifications) DO_NOTIF=1 ;;
+    --with-visualizer)    DO_VIZ=1 ;;
+    --with-launcher)      DO_LAUNCHER=1 ;;
+    --with-power)         DO_POWER=1 ;;
+    --with-overview)      DO_OVERVIEW=1 ;;
+    --with-shell)         DO_VIZ=1; DO_LAUNCHER=1; DO_POWER=1; DO_OVERVIEW=1 ;;
+    --keep-theme)         KEEP_THEME=1 ;;
+    --dry-run)            DRY_RUN=1 ;;
     -h|--help)         usage 0 ;;
     *) err "unknown argument: $1"; usage 1 ;;
   esac
@@ -73,6 +75,7 @@ comp_rm_lockscreen() {
   ok "removed: lockscreen; hyprlock flow restored"
 }
 
+comp_rm_notifications() { info "Removing themed notifications — restoring mako"; remove_notifications; ok "removed: notifications; mako restored"; }
 comp_rm_visualizer() { info "Removing audio visualizer"; remove_qs_component visualizer; ok "removed: visualizer"; }
 comp_rm_launcher()   { info "Removing app launcher";      remove_qs_component launcher;   ok "removed: launcher"; }
 comp_rm_power()      { info "Removing power menu";        remove_qs_component power;      ok "removed: power"; }
@@ -81,6 +84,7 @@ comp_rm_overview()   { info "Removing workspace overview"; remove_qs_component o
 info "Uninstalling from ${DEST_HOME} $([[ $DRY_RUN == 1 ]] && echo '(dry-run)')"
 comp_rm_toggle          # always safe: no-op if not installed
 [[ $DO_LOCK == 1 ]] && comp_rm_lockscreen
+[[ $DO_NOTIF == 1 ]] && comp_rm_notifications
 [[ $DO_VIZ == 1 ]] && comp_rm_visualizer
 [[ $DO_LAUNCHER == 1 ]] && comp_rm_launcher
 [[ $DO_POWER == 1 ]] && comp_rm_power
