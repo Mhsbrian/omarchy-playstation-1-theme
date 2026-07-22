@@ -319,7 +319,10 @@ ShellRoot {
 
             Connections {
                 target: root
-                function onShownChanged() { if (root.shown) input.forceActiveFocus() }
+                // Clear the field on every open — input.text is the source of truth
+                // (onTextChanged drives root.query), so resetting query alone leaves
+                // the previous search visible. Wipe the TextInput itself.
+                function onShownChanged() { if (root.shown) { input.text = ""; input.forceActiveFocus() } }
             }
         }
     }
