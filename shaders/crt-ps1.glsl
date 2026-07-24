@@ -12,15 +12,15 @@ in vec2 v_texcoord;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-const float SCANLINE_PERIOD    = 3.0;  // physical px per scanline cycle (bigger = chunkier lines)
-const float SCANLINE_STRENGTH  = 0.28; // darkening of the dark line (0.0-1.0)
-const float GRILLE_PERIOD      = 3.0;  // physical px per R/G/B triad
-const float GRILLE_STRENGTH    = 0.18; // aperture-grille saturation
-const float VIGNETTE_STRENGTH  = 0.35; // corner darkening
-const float VIGNETTE_EXTENT    = 0.85; // how far the vignette reaches inward
-const float CURVE              = 0.03; // barrel distortion (0 = flat, ~0.05 = strong tube)
-const float ABERRATION         = 0.0018; // chromatic RGB split at edges
-const float BLOOM_LIFT         = 0.06; // phosphor glow: midtone lift
+const float SCANLINE_PERIOD    = 3.0;   // physical px per scanline cycle (bigger = chunkier lines)
+const float SCANLINE_STRENGTH  = 0.17;  // darkening of the dark line (0.0-1.0)
+const float GRILLE_PERIOD      = 3.0;   // physical px per R/G/B triad
+const float GRILLE_STRENGTH    = 0.10;  // aperture-grille saturation
+const float VIGNETTE_STRENGTH  = 0.22;  // corner darkening
+const float VIGNETTE_EXTENT    = 0.88;  // how far the vignette reaches inward
+const float CURVE              = 0.005;  // barrel distortion (0 = flat, ~0.05 = strong tube)
+const float ABERRATION         = 0.0010; // chromatic RGB split at edges
+const float BLOOM_LIFT         = 0.04;  // phosphor glow: midtone lift
 const float PI = 3.14159265;
 
 void main() {

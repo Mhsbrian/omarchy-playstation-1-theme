@@ -3,6 +3,15 @@
 All notable changes to this theme are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions use [SemVer](https://semver.org/).
 
+## [1.2.1] — 2026-07-23
+
+### Changed
+- Softer CRT shader defaults (`shaders/crt-ps1.glsl`): nearly-flat screen
+  (`CURVE` 0.03 → 0.005) and reduced overall intensity — scanlines 0.28 → 0.17,
+  aperture grille 0.18 → 0.10, vignette 0.35 → 0.22, aberration 0.0018 → 0.0010,
+  bloom 0.06 → 0.04. Still a bold arcade preset by default; dial the labeled
+  constants for more/less.
+
 ## [1.2.0] — 2026-07-22
 
 ### Added
